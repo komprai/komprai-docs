@@ -1,33 +1,90 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "Introdução à API"
+description: "Base URLs, autenticação, regiões e códigos de erro"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URLs
 
-## Welcome
+| API | URL | Descrição |
+|-----|-----|-----------|
+| Core | `https://api.global.komprai.dev` | Identidade, stores, billing, SSO |
+| Catalog (sa-east-1) | `https://api.sa-east-1.komprai.dev` | Ofertas — São Paulo |
+| Catalog (us-east-1) | `https://api.us-east-1.komprai.dev` | Ofertas — North Virginia |
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## Autenticação
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+A API usa autenticação por cookie de sessão via [better-auth](https://better-auth.com).
 
-## Authentication
+### Login
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+```bash
+POST /auth/sign-in/email
+Content-Type: application/json
+
+{
+  "email": "usuario@exemplo.com",
+  "password": "senha"
+}
+```
+
+O servidor retorna o cookie `better-auth.session_token` (ou `__Secure-better-auth.session_token` em produção com HTTPS).
+
+### Usando o token
+
+<CodeGroup>
+
+```bash cURL
+curl -b cookies.txt https://api.global.komprai.dev/api/stores
+```
+
+```typescript fetch
+const res = await fetch("https://api.global.komprai.dev/api/stores", {
+  credentials: "include", // envia o cookie automaticamente
+});
+```
+
+</CodeGroup>
+
+<Warning>
+  Não há autenticação por Bearer token. O cookie deve ser enviado com `credentials: "include"` em requisições cross-origin.
+</Warning>
+
+## Regiões
+
+O Core API (`api.global.komprai.dev`) é global — não varia por região.
+
+O Catalog API é regional. Cada região retorna preços e ofertas específicos daquele mercado:
+
+| Região | Host |
+|--------|------|
+| `global` | `api.global.komprai.dev` |
+| `sa-east-1` | `api.sa-east-1.komprai.dev` |
+| `us-east-1` | `api.us-east-1.komprai.dev` |
+
+## Erros
+
+A API usa status HTTP padrão. Erros retornam JSON com a mensagem:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "statusCode": 404,
+  "error": "Not Found",
+  "message": "store.not_found"
+}
 ```
+
+| Status | Significado |
+|--------|-------------|
+| `400` | Parâmetros inválidos |
+| `401` | Não autenticado |
+| `403` | Sem permissão |
+| `404` | Recurso não encontrado |
+| `409` | Conflito (ex: slug já existe) |
+| `429` | Rate limit atingido |
+| `500` | Erro interno |
+
+## Rate Limiting
+
+Rotas sensíveis têm rate limiting automático. O endpoint `/api/users/me` aceita:
+- **200 req/min** para usuários autenticados
+- **100 req/min** para anônimos

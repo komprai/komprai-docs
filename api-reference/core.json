@@ -1,0 +1,5034 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Komprai API",
+    "description": "Documenta\u00e7\u00e3o autom\u00e1tica das rotas da API Komprai",
+    "version": "1.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "better-auth.session_token"
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Health check",
+        "description": "Returns a localized greeting and the current region."
+      }
+    },
+    "/auth/{*}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "*",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Auth passthrough (GET)",
+        "description": "Proxies GET authentication requests to the better-auth handler."
+      },
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "*",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Auth passthrough (POST)",
+        "description": "Proxies POST authentication requests to the better-auth handler (sign-in, sign-up, sign-out, etc.)."
+      }
+    },
+    "/api/admin/bootstrap/become-admin": {
+      "post": {
+        "summary": "Bootstrap admin",
+        "tags": [
+          "Admin"
+        ],
+        "description": "Promotes the authenticated user to admin role. Dev/staging only \u2014 requires a static bootstrap token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "userId"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "userId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/set-password": {
+      "post": {
+        "summary": "Set password",
+        "tags": [
+          "Users"
+        ],
+        "description": "Sets a password for users who signed up via social login or magic link. Required before enabling TOTP two-factor authentication.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "password": {
+                    "minLength": 8,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        },
+        "summary": "Get current user",
+        "description": "Returns the authenticated user's profile and active session."
+      }
+    },
+    "/api/hello": {
+      "get": {
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ],
+        "description": "Returns a localized greeting and the current region. Useful for confirming the API is reachable.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "name",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "greeting",
+                    "welcome",
+                    "locale",
+                    "region"
+                  ],
+                  "properties": {
+                    "greeting": {
+                      "type": "string"
+                    },
+                    "welcome": {
+                      "type": "string"
+                    },
+                    "locale": {
+                      "type": "string"
+                    },
+                    "region": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stores": {
+      "get": {
+        "summary": "List stores",
+        "tags": [
+          "Stores"
+        ],
+        "description": "Returns all stores owned by the authenticated user. Admins receive all stores.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "userId",
+                      "name",
+                      "active",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create store",
+        "tags": [
+          "Stores"
+        ],
+        "description": "Creates a new store. Optionally associate it with an organization via organizationId.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "organizationId": {
+                    "type": "string"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stores/{id}": {
+      "get": {
+        "summary": "Get store",
+        "tags": [
+          "Stores"
+        ],
+        "description": "Returns a single store by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update store",
+        "tags": [
+          "Stores"
+        ],
+        "description": "Updates a store's name, description, or active status. Changing active triggers billing metering events.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete store",
+        "tags": [
+          "Stores"
+        ],
+        "description": "Permanently deletes a store and stops its billing metering.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/invoices": {
+      "get": {
+        "summary": "List invoices",
+        "tags": [
+          "Billing"
+        ],
+        "description": "Returns invoices for the authenticated user. Pass organizationId to retrieve org invoices.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "organizationId",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "ownerType",
+                      "ownerId",
+                      "periodYear",
+                      "periodMonth",
+                      "periodStart",
+                      "periodEnd",
+                      "currency",
+                      "lineItems",
+                      "subtotal",
+                      "tax",
+                      "total",
+                      "status",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "ownerType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "user"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "org"
+                            ]
+                          }
+                        ]
+                      },
+                      "ownerId": {
+                        "type": "string"
+                      },
+                      "periodYear": {
+                        "type": "number"
+                      },
+                      "periodMonth": {
+                        "type": "number"
+                      },
+                      "periodStart": {
+                        "type": "string"
+                      },
+                      "periodEnd": {
+                        "type": "string"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "lineItems": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "resourceType",
+                            "resourceId",
+                            "billingType",
+                            "quantity",
+                            "ratePerUnit",
+                            "amount"
+                          ],
+                          "properties": {
+                            "resourceType": {
+                              "type": "string"
+                            },
+                            "resourceId": {
+                              "type": "string"
+                            },
+                            "resourceLabel": {
+                              "type": "string"
+                            },
+                            "billingType": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "hourly"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "metered"
+                                  ]
+                                }
+                              ]
+                            },
+                            "quantity": {
+                              "type": "number"
+                            },
+                            "ratePerUnit": {
+                              "type": "number"
+                            },
+                            "amount": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "subtotal": {
+                        "type": "number"
+                      },
+                      "tax": {
+                        "type": "number"
+                      },
+                      "total": {
+                        "type": "number"
+                      },
+                      "status": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "draft"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "issued"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "void"
+                            ]
+                          }
+                        ]
+                      },
+                      "issuedAt": {
+                        "type": "string"
+                      },
+                      "voidedAt": {
+                        "type": "string"
+                      },
+                      "notes": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/invoices/{id}": {
+      "get": {
+        "summary": "Get invoice",
+        "tags": [
+          "Billing"
+        ],
+        "description": "Returns a single invoice by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "ownerType",
+                    "ownerId",
+                    "periodYear",
+                    "periodMonth",
+                    "periodStart",
+                    "periodEnd",
+                    "currency",
+                    "lineItems",
+                    "subtotal",
+                    "tax",
+                    "total",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "ownerType": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "user"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "org"
+                          ]
+                        }
+                      ]
+                    },
+                    "ownerId": {
+                      "type": "string"
+                    },
+                    "periodYear": {
+                      "type": "number"
+                    },
+                    "periodMonth": {
+                      "type": "number"
+                    },
+                    "periodStart": {
+                      "type": "string"
+                    },
+                    "periodEnd": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "lineItems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "resourceType",
+                          "resourceId",
+                          "billingType",
+                          "quantity",
+                          "ratePerUnit",
+                          "amount"
+                        ],
+                        "properties": {
+                          "resourceType": {
+                            "type": "string"
+                          },
+                          "resourceId": {
+                            "type": "string"
+                          },
+                          "resourceLabel": {
+                            "type": "string"
+                          },
+                          "billingType": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "hourly"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "metered"
+                                ]
+                              }
+                            ]
+                          },
+                          "quantity": {
+                            "type": "number"
+                          },
+                          "ratePerUnit": {
+                            "type": "number"
+                          },
+                          "amount": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "subtotal": {
+                      "type": "number"
+                    },
+                    "tax": {
+                      "type": "number"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "draft"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "issued"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "void"
+                          ]
+                        }
+                      ]
+                    },
+                    "issuedAt": {
+                      "type": "string"
+                    },
+                    "voidedAt": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/usage": {
+      "get": {
+        "summary": "List usage records",
+        "tags": [
+          "Billing"
+        ],
+        "description": "Returns up to 500 usage records for the authenticated user, sorted by most recent.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "organizationId",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "ledgerId",
+                      "resourceType",
+                      "resourceId",
+                      "ownerType",
+                      "ownerId",
+                      "billingType",
+                      "quantity",
+                      "ratePerUnit",
+                      "amount",
+                      "currency",
+                      "invoiceId",
+                      "recordedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "ledgerId": {
+                        "type": "string"
+                      },
+                      "resourceType": {
+                        "type": "string"
+                      },
+                      "resourceId": {
+                        "type": "string"
+                      },
+                      "ownerType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "user"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "org"
+                            ]
+                          }
+                        ]
+                      },
+                      "ownerId": {
+                        "type": "string"
+                      },
+                      "billingType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "hourly"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "metered"
+                            ]
+                          }
+                        ]
+                      },
+                      "quantity": {
+                        "type": "number"
+                      },
+                      "ratePerUnit": {
+                        "type": "number"
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "invoiceId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "recordedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/billing/resource-configs": {
+      "get": {
+        "summary": "List resource configs",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Returns all billing resource configurations defining rates per resource type.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "resourceType",
+                      "billingType",
+                      "ratePerUnit",
+                      "currency",
+                      "active",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "resourceType": {
+                        "type": "string"
+                      },
+                      "billingType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "hourly"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "metered"
+                            ]
+                          }
+                        ]
+                      },
+                      "ratePerUnit": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create resource config",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Creates a new billing configuration for a resource type.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "resourceType",
+                  "billingType",
+                  "ratePerUnit"
+                ],
+                "properties": {
+                  "resourceType": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "billingType": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "hourly"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "metered"
+                        ]
+                      }
+                    ]
+                  },
+                  "ratePerUnit": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "resourceType",
+                    "billingType",
+                    "ratePerUnit",
+                    "currency",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "resourceType": {
+                      "type": "string"
+                    },
+                    "billingType": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "hourly"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "metered"
+                          ]
+                        }
+                      ]
+                    },
+                    "ratePerUnit": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/billing/resource-configs/{resourceType}": {
+      "patch": {
+        "summary": "Update resource config",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Updates the rate, currency, description, or active status of a billing resource configuration.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ratePerUnit": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "resourceType",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "resourceType",
+                    "billingType",
+                    "ratePerUnit",
+                    "currency",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "resourceType": {
+                      "type": "string"
+                    },
+                    "billingType": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "hourly"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "metered"
+                          ]
+                        }
+                      ]
+                    },
+                    "ratePerUnit": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/billing/invoices": {
+      "get": {
+        "summary": "List all invoices (admin)",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Returns all invoices across all users and organizations.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "ownerId",
+            "required": false
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "user"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "org"
+                  ]
+                }
+              ]
+            },
+            "in": "query",
+            "name": "ownerType",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "year",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "month",
+            "required": false
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "draft"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "issued"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "void"
+                  ]
+                }
+              ]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "ownerType",
+                      "ownerId",
+                      "periodYear",
+                      "periodMonth",
+                      "periodStart",
+                      "periodEnd",
+                      "currency",
+                      "lineItems",
+                      "subtotal",
+                      "tax",
+                      "total",
+                      "status",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "ownerType": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "user"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "org"
+                            ]
+                          }
+                        ]
+                      },
+                      "ownerId": {
+                        "type": "string"
+                      },
+                      "periodYear": {
+                        "type": "number"
+                      },
+                      "periodMonth": {
+                        "type": "number"
+                      },
+                      "periodStart": {
+                        "type": "string"
+                      },
+                      "periodEnd": {
+                        "type": "string"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "lineItems": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "resourceType",
+                            "resourceId",
+                            "billingType",
+                            "quantity",
+                            "ratePerUnit",
+                            "amount"
+                          ],
+                          "properties": {
+                            "resourceType": {
+                              "type": "string"
+                            },
+                            "resourceId": {
+                              "type": "string"
+                            },
+                            "resourceLabel": {
+                              "type": "string"
+                            },
+                            "billingType": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "hourly"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "metered"
+                                  ]
+                                }
+                              ]
+                            },
+                            "quantity": {
+                              "type": "number"
+                            },
+                            "ratePerUnit": {
+                              "type": "number"
+                            },
+                            "amount": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "subtotal": {
+                        "type": "number"
+                      },
+                      "tax": {
+                        "type": "number"
+                      },
+                      "total": {
+                        "type": "number"
+                      },
+                      "status": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "draft"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "issued"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "void"
+                            ]
+                          }
+                        ]
+                      },
+                      "issuedAt": {
+                        "type": "string"
+                      },
+                      "voidedAt": {
+                        "type": "string"
+                      },
+                      "notes": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/billing/invoices/generate": {
+      "post": {
+        "summary": "Generate invoices",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Triggers invoice generation for a given billing period.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "year",
+                  "month"
+                ],
+                "properties": {
+                  "year": {
+                    "minimum": 2020,
+                    "type": "number"
+                  },
+                  "month": {
+                    "minimum": 1,
+                    "maximum": 12,
+                    "type": "number"
+                  },
+                  "ownerType": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "org"
+                        ]
+                      }
+                    ]
+                  },
+                  "ownerId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/admin/billing/invoices/{id}/void": {
+      "patch": {
+        "summary": "Void invoice",
+        "tags": [
+          "Admin - Billing"
+        ],
+        "description": "Marks an invoice as void. Voided invoices are retained for audit purposes.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "ownerType",
+                    "ownerId",
+                    "periodYear",
+                    "periodMonth",
+                    "periodStart",
+                    "periodEnd",
+                    "currency",
+                    "lineItems",
+                    "subtotal",
+                    "tax",
+                    "total",
+                    "status",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "ownerType": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "user"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "org"
+                          ]
+                        }
+                      ]
+                    },
+                    "ownerId": {
+                      "type": "string"
+                    },
+                    "periodYear": {
+                      "type": "number"
+                    },
+                    "periodMonth": {
+                      "type": "number"
+                    },
+                    "periodStart": {
+                      "type": "string"
+                    },
+                    "periodEnd": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "lineItems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "resourceType",
+                          "resourceId",
+                          "billingType",
+                          "quantity",
+                          "ratePerUnit",
+                          "amount"
+                        ],
+                        "properties": {
+                          "resourceType": {
+                            "type": "string"
+                          },
+                          "resourceId": {
+                            "type": "string"
+                          },
+                          "resourceLabel": {
+                            "type": "string"
+                          },
+                          "billingType": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "hourly"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "metered"
+                                ]
+                              }
+                            ]
+                          },
+                          "quantity": {
+                            "type": "number"
+                          },
+                          "ratePerUnit": {
+                            "type": "number"
+                          },
+                          "amount": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "subtotal": {
+                      "type": "number"
+                    },
+                    "tax": {
+                      "type": "number"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "draft"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "issued"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "void"
+                          ]
+                        }
+                      ]
+                    },
+                    "issuedAt": {
+                      "type": "string"
+                    },
+                    "voidedAt": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers": {
+      "get": {
+        "summary": "List providers",
+        "tags": [
+          "Providers"
+        ],
+        "description": "Returns active providers available in the current region.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "slug",
+                      "allowedIn",
+                      "organizationOnly",
+                      "configurationSchema",
+                      "createdBy",
+                      "active",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "slug": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "allowedIn": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "organizationOnly": {
+                        "type": "boolean"
+                      },
+                      "configurationSchema": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "createdBy": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create provider",
+        "tags": [
+          "Providers"
+        ],
+        "description": "Registers a new provider with a JSON configuration schema. Admin only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "slug",
+                  "allowedIn",
+                  "configurationSchema"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "slug": {
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9-]+$",
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "allowedIn": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "organizationOnly": {
+                    "type": "boolean"
+                  },
+                  "configurationSchema": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "allowedIn",
+                    "organizationOnly",
+                    "configurationSchema",
+                    "createdBy",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "allowedIn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "organizationOnly": {
+                      "type": "boolean"
+                    },
+                    "configurationSchema": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/{id}": {
+      "get": {
+        "summary": "Get provider",
+        "tags": [
+          "Providers"
+        ],
+        "description": "Returns a single provider by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "allowedIn",
+                    "organizationOnly",
+                    "configurationSchema",
+                    "createdBy",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "allowedIn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "organizationOnly": {
+                      "type": "boolean"
+                    },
+                    "configurationSchema": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update provider",
+        "tags": [
+          "Providers"
+        ],
+        "description": "Updates provider metadata, allowed regions, or configuration schema. Admin only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "allowedIn": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "organizationOnly": {
+                    "type": "boolean"
+                  },
+                  "configurationSchema": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "allowedIn",
+                    "organizationOnly",
+                    "configurationSchema",
+                    "createdBy",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "allowedIn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "organizationOnly": {
+                      "type": "boolean"
+                    },
+                    "configurationSchema": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete provider",
+        "tags": [
+          "Providers"
+        ],
+        "description": "Permanently deletes a provider. Admin only.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stores/{storeId}/provider-credentials": {
+      "get": {
+        "summary": "List provider credentials",
+        "tags": [
+          "Provider Credentials"
+        ],
+        "description": "Returns all provider credentials associated with a store.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "storeId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "providerId",
+                      "storeId",
+                      "status",
+                      "active",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "providerId": {
+                        "type": "string"
+                      },
+                      "storeId": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "boolean"
+                        }
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create provider credential",
+        "tags": [
+          "Provider Credentials"
+        ],
+        "description": "Creates encrypted credentials for a provider on a given store.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "providerId",
+                  "configuration"
+                ],
+                "properties": {
+                  "providerId": {
+                    "type": "string"
+                  },
+                  "configuration": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "storeId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "providerId",
+                    "storeId",
+                    "status",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "providerId": {
+                      "type": "string"
+                    },
+                    "storeId": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "boolean"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stores/{storeId}/provider-credentials/{id}": {
+      "get": {
+        "summary": "Get provider credential",
+        "tags": [
+          "Provider Credentials"
+        ],
+        "description": "Returns a single provider credential by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "storeId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "providerId",
+                    "storeId",
+                    "status",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "providerId": {
+                      "type": "string"
+                    },
+                    "storeId": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "boolean"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update provider credential",
+        "tags": [
+          "Provider Credentials"
+        ],
+        "description": "Replaces the encrypted configuration for an existing provider credential.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "configuration"
+                ],
+                "properties": {
+                  "configuration": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "storeId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "providerId",
+                    "storeId",
+                    "status",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "providerId": {
+                      "type": "string"
+                    },
+                    "storeId": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "boolean"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete provider credential",
+        "tags": [
+          "Provider Credentials"
+        ],
+        "description": "Permanently deletes a provider credential from a store.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "storeId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/regions": {
+      "get": {
+        "summary": "List regions",
+        "tags": [
+          "Regions"
+        ],
+        "description": "Returns all active deployment regions with pricing multipliers.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "key",
+                      "flag",
+                      "location",
+                      "multiplier",
+                      "active",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "flag": {
+                        "type": "string"
+                      },
+                      "location": {
+                        "type": "string"
+                      },
+                      "multiplier": {
+                        "type": "number"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create region",
+        "tags": [
+          "Regions"
+        ],
+        "description": "Creates a new deployment region. Admin only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "key",
+                  "flag",
+                  "location",
+                  "multiplier"
+                ],
+                "properties": {
+                  "key": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "flag": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "location": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "multiplier": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "key",
+                    "flag",
+                    "location",
+                    "multiplier",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "flag": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "multiplier": {
+                      "type": "number"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/regions/{id}": {
+      "get": {
+        "summary": "Get region",
+        "tags": [
+          "Regions"
+        ],
+        "description": "Returns a single region by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "key",
+                    "flag",
+                    "location",
+                    "multiplier",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "flag": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "multiplier": {
+                      "type": "number"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update region",
+        "tags": [
+          "Regions"
+        ],
+        "description": "Updates a region's flag, location, pricing multiplier, or active status. Admin only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "flag": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "location": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "multiplier": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "key",
+                    "flag",
+                    "location",
+                    "multiplier",
+                    "active",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "flag": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "multiplier": {
+                      "type": "number"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete region",
+        "tags": [
+          "Regions"
+        ],
+        "description": "Permanently deletes a region. Admin only.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/lookup": {
+      "get": {
+        "summary": "Lookup SSO by email",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Checks whether an email domain requires SSO login.",
+        "parameters": [
+          {
+            "schema": {
+              "format": "email",
+              "type": "string"
+            },
+            "in": "query",
+            "name": "email",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ssoRequired"
+                  ],
+                  "properties": {
+                    "ssoRequired": {
+                      "type": "boolean"
+                    },
+                    "orgId": {
+                      "type": "string"
+                    },
+                    "orgName": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/{orgId}/start": {
+      "get": {
+        "summary": "Start SSO flow",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Initiates the OIDC authorization flow and redirects to the identity provider.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "redirectTo",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/sso/callback": {
+      "get": {
+        "summary": "SSO callback",
+        "tags": [
+          "SSO"
+        ],
+        "description": "OIDC redirect callback. Validates the code, provisions the user, and sets a session cookie.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "code",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "state",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/sso/orgs/{orgId}/config": {
+      "get": {
+        "summary": "Get SSO configuration",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Returns the OIDC configuration for an organization.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "organizationId",
+                    "provider",
+                    "clientId",
+                    "discoveryUrl",
+                    "emailDomains",
+                    "enabled",
+                    "hasSecret",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "azure_ad"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "okta"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "google_workspace"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "generic_oidc"
+                          ]
+                        }
+                      ]
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "tenantId": {
+                      "type": "string"
+                    },
+                    "discoveryUrl": {
+                      "type": "string"
+                    },
+                    "emailDomains": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "hasSecret": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create or update SSO configuration",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Upserts the OIDC provider configuration. All email domains must be verified first.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "clientId",
+                  "emailDomains",
+                  "enabled"
+                ],
+                "properties": {
+                  "provider": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "azure_ad"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "okta"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "google_workspace"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "generic_oidc"
+                        ]
+                      }
+                    ]
+                  },
+                  "clientId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "clientSecret": {
+                    "type": "string"
+                  },
+                  "tenantId": {
+                    "type": "string"
+                  },
+                  "discoveryUrl": {
+                    "type": "string"
+                  },
+                  "emailDomains": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "organizationId",
+                    "provider",
+                    "clientId",
+                    "discoveryUrl",
+                    "emailDomains",
+                    "enabled",
+                    "hasSecret",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "azure_ad"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "okta"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "google_workspace"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "generic_oidc"
+                          ]
+                        }
+                      ]
+                    },
+                    "clientId": {
+                      "type": "string"
+                    },
+                    "tenantId": {
+                      "type": "string"
+                    },
+                    "discoveryUrl": {
+                      "type": "string"
+                    },
+                    "emailDomains": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "hasSecret": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete SSO configuration",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Removes the OIDC configuration, disabling SSO for the organization.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/sso/orgs/{orgId}/domains": {
+      "get": {
+        "summary": "List verified domains",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Returns all domain verification records with DNS TXT challenge details.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "domain",
+                      "txtRecordName",
+                      "txtRecordValue",
+                      "status",
+                      "allowAutoEnroll",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "domain": {
+                        "type": "string"
+                      },
+                      "txtRecordName": {
+                        "type": "string"
+                      },
+                      "txtRecordValue": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "pending"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "verified"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "failed"
+                            ]
+                          }
+                        ]
+                      },
+                      "allowAutoEnroll": {
+                        "type": "boolean"
+                      },
+                      "verifiedAt": {
+                        "type": "string"
+                      },
+                      "lastCheckedAt": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add domain",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Registers a domain for DNS verification. Returns the TXT record to publish.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "domain"
+                ],
+                "properties": {
+                  "domain": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "domain",
+                    "txtRecordName",
+                    "txtRecordValue",
+                    "status",
+                    "allowAutoEnroll",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "txtRecordName": {
+                      "type": "string"
+                    },
+                    "txtRecordValue": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "pending"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "verified"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "failed"
+                          ]
+                        }
+                      ]
+                    },
+                    "allowAutoEnroll": {
+                      "type": "boolean"
+                    },
+                    "verifiedAt": {
+                      "type": "string"
+                    },
+                    "lastCheckedAt": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/orgs/{orgId}/domains/{domain}/verify": {
+      "post": {
+        "summary": "Verify domain",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Triggers a DNS TXT lookup to verify domain ownership.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "domain",
+                    "txtRecordName",
+                    "txtRecordValue",
+                    "status",
+                    "allowAutoEnroll",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "txtRecordName": {
+                      "type": "string"
+                    },
+                    "txtRecordValue": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "pending"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "verified"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "failed"
+                          ]
+                        }
+                      ]
+                    },
+                    "allowAutoEnroll": {
+                      "type": "boolean"
+                    },
+                    "verifiedAt": {
+                      "type": "string"
+                    },
+                    "lastCheckedAt": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/orgs/{orgId}/domains/{domain}": {
+      "patch": {
+        "summary": "Update domain settings",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Toggles allowAutoEnroll on a verified domain.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "allowAutoEnroll"
+                ],
+                "properties": {
+                  "allowAutoEnroll": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove domain",
+        "tags": [
+          "SSO"
+        ],
+        "description": "Removes a domain from the organization's verified domain list.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/reports": {
+      "get": {
+        "summary": "List reports",
+        "tags": [
+          "Reports"
+        ],
+        "description": "Returns all reports owned by the authenticated user.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "userId",
+                      "name",
+                      "type",
+                      "query",
+                      "config",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "table"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "bar_chart"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "line_chart"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "pie_chart"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "metric"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "custom"
+                            ]
+                          }
+                        ]
+                      },
+                      "query": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "config": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create report",
+        "tags": [
+          "Reports"
+        ],
+        "description": "Creates a new report with a query definition and visualization config.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "organizationId": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "table"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "bar_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "line_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "pie_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "metric"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "custom"
+                        ]
+                      }
+                    ]
+                  },
+                  "query": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "config": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "type",
+                    "query",
+                    "config",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "table"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "bar_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "line_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "pie_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "metric"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "custom"
+                          ]
+                        }
+                      ]
+                    },
+                    "query": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "config": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{id}": {
+      "get": {
+        "summary": "Get report",
+        "tags": [
+          "Reports"
+        ],
+        "description": "Returns a single report by ID.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "type",
+                    "query",
+                    "config",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "table"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "bar_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "line_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "pie_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "metric"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "custom"
+                          ]
+                        }
+                      ]
+                    },
+                    "query": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "config": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update report",
+        "tags": [
+          "Reports"
+        ],
+        "description": "Updates a report's name, description, type, query, or visualization config.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "type": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "table"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "bar_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "line_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "pie_chart"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "metric"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "custom"
+                        ]
+                      }
+                    ]
+                  },
+                  "query": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "config": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "type",
+                    "query",
+                    "config",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "table"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "bar_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "line_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "pie_chart"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "metric"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "custom"
+                          ]
+                        }
+                      ]
+                    },
+                    "query": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "config": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete report",
+        "tags": [
+          "Reports"
+        ],
+        "description": "Permanently deletes a report.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboards": {
+      "get": {
+        "summary": "List dashboards",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "Returns all dashboards owned by the authenticated user.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "userId",
+                      "name",
+                      "widgets",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "widgets": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "reportId",
+                            "layout",
+                            "config"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "reportId": {
+                              "type": "string"
+                            },
+                            "layout": {
+                              "type": "object",
+                              "required": [
+                                "x",
+                                "y",
+                                "w",
+                                "h"
+                              ],
+                              "properties": {
+                                "x": {
+                                  "minimum": 0,
+                                  "type": "number"
+                                },
+                                "y": {
+                                  "minimum": 0,
+                                  "type": "number"
+                                },
+                                "w": {
+                                  "minimum": 1,
+                                  "type": "number"
+                                },
+                                "h": {
+                                  "minimum": 1,
+                                  "type": "number"
+                                }
+                              }
+                            },
+                            "config": {
+                              "type": "object",
+                              "additionalProperties": {}
+                            }
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create dashboard",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "Creates a new dashboard with an optional initial set of widgets.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "organizationId": {
+                    "type": "string"
+                  },
+                  "widgets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "reportId",
+                        "layout"
+                      ],
+                      "properties": {
+                        "reportId": {
+                          "type": "string"
+                        },
+                        "layout": {
+                          "type": "object",
+                          "required": [
+                            "x",
+                            "y",
+                            "w",
+                            "h"
+                          ],
+                          "properties": {
+                            "x": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "y": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "w": {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            "h": {
+                              "minimum": 1,
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "config": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "widgets",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "widgets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "reportId",
+                          "layout",
+                          "config"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "reportId": {
+                            "type": "string"
+                          },
+                          "layout": {
+                            "type": "object",
+                            "required": [
+                              "x",
+                              "y",
+                              "w",
+                              "h"
+                            ],
+                            "properties": {
+                              "x": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "w": {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              "h": {
+                                "minimum": 1,
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "config": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboards/{id}": {
+      "get": {
+        "summary": "Get dashboard",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "Returns a dashboard with fully expanded report data for each widget.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "widgets",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "widgets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "reportId",
+                          "layout",
+                          "config"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "reportId": {
+                            "type": "string"
+                          },
+                          "layout": {
+                            "type": "object",
+                            "required": [
+                              "x",
+                              "y",
+                              "w",
+                              "h"
+                            ],
+                            "properties": {
+                              "x": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "w": {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              "h": {
+                                "minimum": 1,
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "config": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          },
+                          "report": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "userId",
+                              "name",
+                              "type",
+                              "query",
+                              "config",
+                              "createdAt",
+                              "updatedAt"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "userId": {
+                                "type": "string"
+                              },
+                              "organizationId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "table"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "bar_chart"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "line_chart"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "pie_chart"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "metric"
+                                    ]
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "custom"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "query": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              },
+                              "config": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update dashboard",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "Updates a dashboard's name, description, or widget layout.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "widgets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "reportId",
+                        "layout"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "reportId": {
+                          "type": "string"
+                        },
+                        "layout": {
+                          "type": "object",
+                          "required": [
+                            "x",
+                            "y",
+                            "w",
+                            "h"
+                          ],
+                          "properties": {
+                            "x": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "y": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "w": {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            "h": {
+                              "minimum": 1,
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "config": {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "name",
+                    "widgets",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "widgets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "reportId",
+                          "layout",
+                          "config"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "reportId": {
+                            "type": "string"
+                          },
+                          "layout": {
+                            "type": "object",
+                            "required": [
+                              "x",
+                              "y",
+                              "w",
+                              "h"
+                            ],
+                            "properties": {
+                              "x": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "y": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "w": {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              "h": {
+                                "minimum": 1,
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "config": {
+                            "type": "object",
+                            "additionalProperties": {}
+                          }
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete dashboard",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "Permanently deletes a dashboard and all its widgets.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ]
+}

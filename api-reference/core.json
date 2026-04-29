@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Komprai API",
-    "description": "Documenta\u00e7\u00e3o autom\u00e1tica das rotas da API Komprai",
+    "description": "Documentação automática das rotas da API Komprai",
     "version": "1.0.0"
   },
   "components": {
@@ -13,18 +13,26 @@
         "name": "better-auth.session_token"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["statusCode", "error", "message"],
+        "properties": {
+          "statusCode": { "type": "integer" },
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
   },
   "paths": {
-    "/health": {
+    "/core/health": {
       "get": {
         "responses": {
           "200": {
             "description": "Default Response"
           }
-        },
-        "summary": "Health check",
-        "description": "Returns a localized greeting and the current region."
+        }
       }
     },
     "/auth/{*}": {
@@ -43,9 +51,7 @@
           "200": {
             "description": "Default Response"
           }
-        },
-        "summary": "Auth passthrough (GET)",
-        "description": "Proxies GET authentication requests to the better-auth handler."
+        }
       },
       "post": {
         "parameters": [
@@ -62,9 +68,7 @@
           "200": {
             "description": "Default Response"
           }
-        },
-        "summary": "Auth passthrough (POST)",
-        "description": "Proxies POST authentication requests to the better-auth handler (sign-in, sign-up, sign-out, etc.)."
+        }
       }
     },
     "/api/admin/bootstrap/become-admin": {
@@ -73,7 +77,7 @@
         "tags": [
           "Admin"
         ],
-        "description": "Promotes the authenticated user to admin role. Dev/staging only \u2014 requires a static bootstrap token.",
+        "description": "Promotes the authenticated user (or a given userId) to admin role. Dev/staging only — requires a static bootstrap token.",
         "requestBody": {
           "required": true,
           "content": {
@@ -128,7 +132,7 @@
         "tags": [
           "Users"
         ],
-        "description": "Sets a password for users who signed up via social login or magic link. Required before enabling TOTP two-factor authentication.",
+        "description": "Sets a password for users who signed up via social login or magic link and have no credential account yet. Required before enabling TOTP-based two-factor authentication.",
         "requestBody": {
           "required": true,
           "content": {
@@ -176,59 +180,6 @@
           "200": {
             "description": "Default Response"
           }
-        },
-        "summary": "Get current user",
-        "description": "Returns the authenticated user's profile and active session."
-      }
-    },
-    "/api/hello": {
-      "get": {
-        "summary": "Health check",
-        "tags": [
-          "Health"
-        ],
-        "description": "Returns a localized greeting and the current region. Useful for confirming the API is reachable.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "query",
-            "name": "name",
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "greeting",
-                    "welcome",
-                    "locale",
-                    "region"
-                  ],
-                  "properties": {
-                    "greeting": {
-                      "type": "string"
-                    },
-                    "welcome": {
-                      "type": "string"
-                    },
-                    "locale": {
-                      "type": "string"
-                    },
-                    "region": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
         }
       }
     },
@@ -238,10 +189,10 @@
         "tags": [
           "Stores"
         ],
-        "description": "Returns all stores owned by the authenticated user. Admins receive all stores.",
+        "description": "Returns all stores scoped to the session's active organization. Requires an authenticated session with an active organization. Admins receive all stores regardless of organization.",
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "List of stores",
             "content": {
               "application/json": {
                 "schema": {
@@ -251,6 +202,7 @@
                     "required": [
                       "id",
                       "userId",
+                      "organizationId",
                       "name",
                       "active",
                       "createdAt",
@@ -258,13 +210,16 @@
                     ],
                     "properties": {
                       "id": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Unique store identifier (UUID)"
                       },
                       "userId": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "ID of the user who created the store"
                       },
                       "organizationId": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "ID of the organization that owns the store"
                       },
                       "name": {
                         "type": "string"
@@ -273,16 +228,45 @@
                         "type": "string"
                       },
                       "active": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Whether the store is active"
                       },
                       "createdAt": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "date-time"
                       },
                       "updatedAt": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "date-time"
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 401,
+                  "error": "Unauthorized",
+                  "message": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No active organization in the session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 403,
+                  "error": "Forbidden",
+                  "message": "Forbidden"
                 }
               }
             }
@@ -294,7 +278,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Creates a new store. Optionally associate it with an organization via organizationId.",
+        "description": "Creates a new store under the session's active organization. The organization is derived from the session — `organizationId` is not accepted in the request body. Requires an authenticated session with an active organization.",
         "requestBody": {
           "required": true,
           "content": {
@@ -307,16 +291,17 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
-                    "type": "string"
+                    "type": "string",
+                    "description": "Display name of the store"
                   },
                   "description": {
-                    "type": "string"
-                  },
-                  "organizationId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Optional description"
                   },
                   "active": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether the store is active. Defaults to true."
                   }
                 }
               }
@@ -325,7 +310,7 @@
         },
         "responses": {
           "201": {
-            "description": "Default Response",
+            "description": "Store created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -333,6 +318,7 @@
                   "required": [
                     "id",
                     "userId",
+                    "organizationId",
                     "name",
                     "active",
                     "createdAt",
@@ -340,13 +326,16 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Unique store identifier (UUID)"
                     },
                     "userId": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "ID of the user who created the store"
                     },
                     "organizationId": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "ID of the organization derived from the session"
                     },
                     "name": {
                       "type": "string"
@@ -358,12 +347,40 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "updatedAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 401,
+                  "error": "Unauthorized",
+                  "message": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No active organization in the session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 403,
+                  "error": "Forbidden",
+                  "message": "Forbidden"
                 }
               }
             }
@@ -377,7 +394,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Returns a single store by ID.",
+        "description": "Returns a single store by ID. Requires an authenticated session with an active organization. The store must belong to that organization (admins can access any store).",
         "parameters": [
           {
             "schema": {
@@ -385,12 +402,13 @@
             },
             "in": "path",
             "name": "id",
-            "required": true
+            "required": true,
+            "description": "Store ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Store found",
             "content": {
               "application/json": {
                 "schema": {
@@ -398,6 +416,7 @@
                   "required": [
                     "id",
                     "userId",
+                    "organizationId",
                     "name",
                     "active",
                     "createdAt",
@@ -405,13 +424,16 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Unique store identifier (UUID)"
                     },
                     "userId": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "ID of the user who created the store"
                     },
                     "organizationId": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "ID of the organization that owns the store"
                     },
                     "name": {
                       "type": "string"
@@ -423,12 +445,53 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "updatedAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 401,
+                  "error": "Unauthorized",
+                  "message": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No active organization in the session, or the store belongs to a different organization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 403,
+                  "error": "Forbidden",
+                  "message": "store.forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Store not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 404,
+                  "error": "Not Found",
+                  "message": "store.not_found"
                 }
               }
             }
@@ -440,7 +503,18 @@
         "tags": [
           "Stores"
         ],
-        "description": "Updates a store's name, description, or active status. Changing active triggers billing metering events.",
+        "description": "Updates a store's name, description, or active status. Requires an authenticated session with an active organization. The store must belong to that organization. All body fields are optional — only provided fields are updated. Pass `description: null` to clear the description.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "Store ID"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -450,33 +524,26 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
-                    "type": "string"
+                    "type": "string",
+                    "description": "New display name"
                   },
                   "description": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "New description. Pass null to clear."
                   },
                   "active": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Enable or disable the store"
                   }
                 }
               }
             }
           }
         },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Default Response",
+            "description": "Store updated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -484,6 +551,7 @@
                   "required": [
                     "id",
                     "userId",
+                    "organizationId",
                     "name",
                     "active",
                     "createdAt",
@@ -491,7 +559,8 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "Unique store identifier (UUID)"
                     },
                     "userId": {
                       "type": "string"
@@ -509,12 +578,53 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     },
                     "updatedAt": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "date-time"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 401,
+                  "error": "Unauthorized",
+                  "message": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No active organization in the session, or the store belongs to a different organization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 403,
+                  "error": "Forbidden",
+                  "message": "store.forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Store not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 404,
+                  "error": "Not Found",
+                  "message": "store.not_found"
                 }
               }
             }
@@ -526,7 +636,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Permanently deletes a store and stops its billing metering.",
+        "description": "Permanently deletes a store. Requires an authenticated session with an active organization. The store must belong to that organization. This action is irreversible.",
         "parameters": [
           {
             "schema": {
@@ -534,15 +644,50 @@
             },
             "in": "path",
             "name": "id",
-            "required": true
+            "required": true,
+            "description": "Store ID"
           }
         ],
         "responses": {
           "204": {
-            "description": "Default Response",
+            "description": "Store deleted successfully"
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 401,
+                  "error": "Unauthorized",
+                  "message": "Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No active organization in the session, or the store belongs to a different organization",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 403,
+                  "error": "Forbidden",
+                  "message": "store.forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Store not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "statusCode": 404,
+                  "error": "Not Found",
+                  "message": "store.not_found"
+                }
               }
             }
           }
@@ -555,7 +700,7 @@
         "tags": [
           "Billing"
         ],
-        "description": "Returns invoices for the authenticated user. Pass organizationId to retrieve org invoices.",
+        "description": "Returns invoices for the authenticated user. Pass `organizationId` to retrieve invoices for an organization you belong to.",
         "parameters": [
           {
             "schema": {
@@ -741,7 +886,7 @@
         "tags": [
           "Billing"
         ],
-        "description": "Returns a single invoice by ID.",
+        "description": "Returns a single invoice by ID. The authenticated user must own the invoice or be a member of the owning organization.",
         "parameters": [
           {
             "schema": {
@@ -924,7 +1069,7 @@
         "tags": [
           "Billing"
         ],
-        "description": "Returns up to 500 usage records for the authenticated user, sorted by most recent.",
+        "description": "Returns up to 500 usage records for the authenticated user, sorted by most recent. Pass `organizationId` to retrieve usage for an organization you belong to.",
         "parameters": [
           {
             "schema": {
@@ -1115,7 +1260,7 @@
         "tags": [
           "Admin - Billing"
         ],
-        "description": "Creates a new billing configuration for a resource type.",
+        "description": "Creates a new billing configuration for a resource type, defining the billing model (flat or metered) and rate per unit.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1343,7 +1488,7 @@
         "tags": [
           "Admin - Billing"
         ],
-        "description": "Returns all invoices across all users and organizations.",
+        "description": "Returns all invoices across all users and organizations. Supports filtering by owner, period, and status.",
         "parameters": [
           {
             "schema": {
@@ -1593,7 +1738,7 @@
         "tags": [
           "Admin - Billing"
         ],
-        "description": "Triggers invoice generation for a given billing period.",
+        "description": "Triggers invoice generation for a given billing period. Can target a specific owner or generate for all users and organizations in bulk.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1651,7 +1796,7 @@
         "tags": [
           "Admin - Billing"
         ],
-        "description": "Marks an invoice as void. Voided invoices are retained for audit purposes.",
+        "description": "Marks an invoice as void. Voided invoices are retained for audit purposes but excluded from payment processing.",
         "parameters": [
           {
             "schema": {
@@ -1834,7 +1979,7 @@
         "tags": [
           "Providers"
         ],
-        "description": "Returns active providers available in the current region.",
+        "description": "Returns active providers available in the current region. Providers define the integration schema that stores use to connect external data sources.",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -1907,7 +2052,7 @@
         "tags": [
           "Providers"
         ],
-        "description": "Registers a new provider with a JSON configuration schema. Admin only.",
+        "description": "Registers a new provider with a JSON configuration schema that stores must satisfy when creating credentials. Admin only.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2023,7 +2168,7 @@
         "tags": [
           "Providers"
         ],
-        "description": "Returns a single provider by ID.",
+        "description": "Returns a single provider by ID, including its configuration schema.",
         "parameters": [
           {
             "schema": {
@@ -2249,7 +2394,7 @@
         "tags": [
           "Provider Credentials"
         ],
-        "description": "Returns all provider credentials associated with a store.",
+        "description": "Returns all provider credentials associated with a store. Credentials hold encrypted configuration for connecting to an external provider.",
         "parameters": [
           {
             "schema": {
@@ -2322,7 +2467,7 @@
         "tags": [
           "Provider Credentials"
         ],
-        "description": "Creates encrypted credentials for a provider on a given store.",
+        "description": "Creates encrypted credentials for a provider on a given store. The `configuration` object must satisfy the provider's `configurationSchema`. Only one credential per provider per store is allowed.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2417,7 +2562,7 @@
         "tags": [
           "Provider Credentials"
         ],
-        "description": "Returns a single provider credential by ID.",
+        "description": "Returns a single provider credential by ID. The configuration is stored encrypted and not exposed in the response.",
         "parameters": [
           {
             "schema": {
@@ -2495,7 +2640,7 @@
         "tags": [
           "Provider Credentials"
         ],
-        "description": "Replaces the encrypted configuration for an existing provider credential.",
+        "description": "Replaces the encrypted configuration for an existing provider credential. The new configuration is validated against the provider's schema before saving.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2629,7 +2774,7 @@
         "tags": [
           "Regions"
         ],
-        "description": "Returns all active deployment regions with pricing multipliers.",
+        "description": "Returns all active deployment regions. Each region has its own Catalog API instance and pricing multiplier.",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -2967,7 +3112,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Checks whether an email domain requires SSO login.",
+        "description": "Checks whether an email domain requires SSO login. Use this before showing the login form to redirect users to their identity provider.",
         "parameters": [
           {
             "schema": {
@@ -3016,7 +3161,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Initiates the OIDC authorization flow and redirects to the identity provider.",
+        "description": "Initiates the OIDC authorization flow for an organization. Redirects the user to the identity provider with a PKCE challenge.",
         "parameters": [
           {
             "schema": {
@@ -3048,7 +3193,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "OIDC redirect callback. Validates the code, provisions the user, and sets a session cookie.",
+        "description": "OIDC redirect callback. Validates the authorization code, exchanges it for tokens, provisions the user account, and sets a session cookie.",
         "parameters": [
           {
             "schema": {
@@ -3080,7 +3225,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Returns the OIDC configuration for an organization.",
+        "description": "Returns the OIDC configuration for an organization. Requires org owner or admin role.",
         "parameters": [
           {
             "schema": {
@@ -3184,7 +3329,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Upserts the OIDC provider configuration. All email domains must be verified first.",
+        "description": "Upserts the OIDC provider configuration for an organization. All email domains must be verified before they can be linked. Client secret is encrypted at rest.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3358,7 +3503,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Removes the OIDC configuration, disabling SSO for the organization.",
+        "description": "Removes the OIDC configuration for an organization, disabling SSO login for all its members.",
         "parameters": [
           {
             "schema": {
@@ -3382,7 +3527,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Returns all domain verification records with DNS TXT challenge details.",
+        "description": "Returns all domain verification records for an organization, including their DNS TXT challenge and current status.",
         "parameters": [
           {
             "schema": {
@@ -3471,7 +3616,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Registers a domain for DNS verification. Returns the TXT record to publish.",
+        "description": "Registers a domain for DNS verification. Returns the TXT record name and value that must be published before calling the verify endpoint.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3578,7 +3723,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Triggers a DNS TXT lookup to verify domain ownership.",
+        "description": "Triggers a DNS TXT lookup to verify domain ownership. The domain status becomes `verified` on success or `failed` on DNS mismatch.",
         "parameters": [
           {
             "schema": {
@@ -3674,7 +3819,7 @@
         "tags": [
           "SSO"
         ],
-        "description": "Toggles allowAutoEnroll on a verified domain.",
+        "description": "Toggles `allowAutoEnroll` on a verified domain. When enabled, users whose email matches this domain are automatically provisioned as org members on first SSO login.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3754,7 +3899,7 @@
         "tags": [
           "Reports"
         ],
-        "description": "Returns all reports owned by the authenticated user.",
+        "description": "Returns all reports owned by the authenticated user. Admins receive all reports.",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -3857,7 +4002,7 @@
         "tags": [
           "Reports"
         ],
-        "description": "Creates a new report with a query definition and visualization config.",
+        "description": "Creates a new report with a query definition and visualization config. Reports can be embedded in dashboards.",
         "requestBody": {
           "required": true,
           "content": {
@@ -4349,7 +4494,7 @@
         "tags": [
           "Dashboards"
         ],
-        "description": "Returns all dashboards owned by the authenticated user.",
+        "description": "Returns all dashboards owned by the authenticated user. Admins receive all dashboards.",
         "responses": {
           "200": {
             "description": "Default Response",
@@ -4453,7 +4598,7 @@
         "tags": [
           "Dashboards"
         ],
-        "description": "Creates a new dashboard with an optional initial set of widgets.",
+        "description": "Creates a new dashboard with an optional initial set of widgets. Each widget references a report and includes a grid layout position.",
         "requestBody": {
           "required": true,
           "content": {
@@ -4627,7 +4772,7 @@
         "tags": [
           "Dashboards"
         ],
-        "description": "Returns a dashboard with fully expanded report data for each widget.",
+        "description": "Returns a dashboard with fully expanded report data for each widget, ready for rendering.",
         "parameters": [
           {
             "schema": {
@@ -4822,7 +4967,7 @@
         "tags": [
           "Dashboards"
         ],
-        "description": "Updates a dashboard's name, description, or widget layout.",
+        "description": "Updates a dashboard's name, description, or widget layout. Replaces the entire widget list when `widgets` is provided.",
         "requestBody": {
           "required": true,
           "content": {
@@ -5019,6 +5164,66 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/internal/provider-credentials/{id}": {
+      "get": {
+        "summary": "Get credential metadata",
+        "tags": [
+          "Internal"
+        ],
+        "description": "Returns metadata for a ProviderCredential for inter-service validation. The credential must belong to the active organization. Encrypted configuration is never exposed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "ProviderCredential ID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "providerId",
+                    "providerSlug",
+                    "active"
+                  ],
+                  "properties": {
+                    "id": {
+                      "description": "Credential ID.",
+                      "type": "string"
+                    },
+                    "providerId": {
+                      "description": "Provider ID.",
+                      "type": "string"
+                    },
+                    "providerSlug": {
+                      "description": "Provider slug, e.g. 'google-maps'.",
+                      "type": "string"
+                    },
+                    "organizationId": {
+                      "description": "Owning organization ID.",
+                      "type": "string"
+                    },
+                    "active": {
+                      "description": "Whether the credential is active.",
+                      "type": "boolean"
+                    }
+                  }
+                }
               }
             }
           }

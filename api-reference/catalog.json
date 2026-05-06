@@ -16,51 +16,57 @@
     "schemas": {}
   },
   "paths": {
-    "/health": {
+    "/catalog/health": {
       "get": {
-        "tags": ["Health"],
-        "summary": "Health check",
         "responses": {
           "200": {
-            "description": "Service is healthy",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["ok", "region"],
-                  "properties": {
-                    "ok": { "type": "boolean" },
-                    "region": { "type": "string" }
-                  }
-                }
-              }
-            }
+            "description": "Default Response"
           }
         }
       }
     },
     "/api/catalog/offers": {
       "get": {
-        "tags": ["Catalog"],
         "summary": "List offers",
-        "description": "Returns all offers available in the current region.",
-        "security": [{ "cookieAuth": [] }],
+        "tags": [
+          "Catalog"
+        ],
+        "description": "Returns all offers available in the current region. The region is determined by which Catalog API instance receives the request.",
         "responses": {
           "200": {
-            "description": "List of offers",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
                     "type": "object",
-                    "required": ["id", "title", "price", "currency", "region"],
+                    "required": [
+                      "id",
+                      "title",
+                      "price",
+                      "currency",
+                      "region"
+                    ],
                     "properties": {
-                      "id": { "type": "string" },
-                      "title": { "type": "string" },
-                      "price": { "type": "number" },
-                      "currency": { "type": "string" },
-                      "region": { "type": "string" }
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "price": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "region": {
+                        "type": "string"
+                      },
+                      "imageUrl": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
@@ -70,21 +76,36 @@
         }
       },
       "post": {
-        "tags": ["Catalog"],
         "summary": "Create offer",
-        "description": "Creates a new offer in the catalog.",
-        "security": [{ "cookieAuth": [] }],
+        "tags": [
+          "Catalog"
+        ],
+        "description": "Publishes a new offer to the catalog in the current region.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["title", "price"],
+                "required": [
+                  "title",
+                  "price"
+                ],
                 "properties": {
-                  "title": { "type": "string" },
-                  "price": { "type": "number" },
-                  "currency": { "type": "string" }
+                  "title": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "price": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -92,16 +113,30 @@
         },
         "responses": {
           "201": {
-            "description": "Offer created",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["title", "price"],
+                  "required": [
+                    "title",
+                    "price"
+                  ],
                   "properties": {
-                    "title": { "type": "string" },
-                    "price": { "type": "number" },
-                    "currency": { "type": "string" }
+                    "title": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "price": {
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -111,5 +146,9 @@
       }
     }
   },
-  "security": [{ "cookieAuth": [] }]
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ]
 }

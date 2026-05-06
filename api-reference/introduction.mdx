@@ -7,7 +7,7 @@ description: "Base URLs, autenticação, regiões e códigos de erro"
 
 | API | URL | Descrição |
 |-----|-----|-----------|
-| Core | `https://api.global.komprai.dev` | Identidade, stores, billing, SSO |
+| Core | `https://api.main.komprai.dev` | Identidade, stores, billing, SSO |
 | Catalog (sa-east-1) | `https://api.sa-east-1.komprai.dev` | Ofertas — São Paulo |
 | Catalog (us-east-1) | `https://api.us-east-1.komprai.dev` | Ofertas — North Virginia |
 
@@ -34,11 +34,11 @@ O servidor retorna o cookie `better-auth.session_token` (ou `__Secure-better-aut
 <CodeGroup>
 
 ```bash cURL
-curl -b cookies.txt https://api.global.komprai.dev/api/stores
+curl -b cookies.txt https://api.main.komprai.dev/api/stores
 ```
 
 ```typescript fetch
-const res = await fetch("https://api.global.komprai.dev/api/stores", {
+const res = await fetch("https://api.main.komprai.dev/api/stores", {
   credentials: "include", // envia o cookie automaticamente
 });
 ```
@@ -51,13 +51,13 @@ const res = await fetch("https://api.global.komprai.dev/api/stores", {
 
 ## Regiões
 
-O Core API (`api.global.komprai.dev`) é global — não varia por região.
+O Core API (`api.main.komprai.dev`) é global — não varia por região.
 
 O Catalog API é regional. Cada região retorna preços e ofertas específicos daquele mercado:
 
 | Região | Host |
 |--------|------|
-| `global` | `api.global.komprai.dev` |
+| `global` | `api.main.komprai.dev` |
 | `sa-east-1` | `api.sa-east-1.komprai.dev` |
 | `us-east-1` | `api.us-east-1.komprai.dev` |
 

@@ -13,7 +13,7 @@ description: "Autentique e faça sua primeira chamada à API Komprai"
 Faça login com email e senha para obter a sessão:
 
 ```bash
-curl -c cookies.txt -X POST https://api.global.komprai.dev/auth/sign-in/email \
+curl -c cookies.txt -X POST https://api.main.komprai.dev/auth/sign-in/email \
   -H "Content-Type: application/json" \
   -d '{"email": "seu@email.com", "password": "sua-senha"}'
 ```
@@ -23,7 +23,7 @@ O cookie `better-auth.session_token` será salvo em `cookies.txt` e usado automa
 ## Passo 2 — Busque seu usuário
 
 ```bash
-curl -b cookies.txt https://api.global.komprai.dev/api/users/me
+curl -b cookies.txt https://api.main.komprai.dev/api/users/me
 ```
 
 Resposta esperada:
@@ -43,7 +43,7 @@ Resposta esperada:
 ## Passo 3 — Crie uma store
 
 ```bash
-curl -b cookies.txt -X POST https://api.global.komprai.dev/api/stores \
+curl -b cookies.txt -X POST https://api.main.komprai.dev/api/stores \
   -H "Content-Type: application/json" \
   -d '{"name": "Minha Loja", "active": true}'
 ```

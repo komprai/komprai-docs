@@ -27,11 +27,11 @@ A Komprai é uma plataforma B2B que conecta lojas a provedores de catálogo e pr
 ```
 komprai.dev (site)          → porta 3000
 console.komprai.dev         → porta 3001
-api.global.komprai.dev      → Core API (porta 4000)
+api.main.komprai.dev      → Core API (porta 4000)
 api.<region>.komprai.dev    → Catalog API (porta 4001)
 ```
 
-O **Core** gerencia identidade, stores, provedores, billing e dashboards — sempre via `api.global.komprai.dev`.
+O **Core** gerencia identidade, stores, provedores, billing e dashboards — sempre via `api.main.komprai.dev`.
 
 O **Catalog** expõe ofertas regionalizadas via `api.<região>.komprai.dev` (ex: `api.sa-east-1.komprai.dev`).
 

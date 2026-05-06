@@ -13,17 +13,7 @@
         "name": "better-auth.session_token"
       }
     },
-    "schemas": {
-      "ErrorResponse": {
-        "type": "object",
-        "required": ["statusCode", "error", "message"],
-        "properties": {
-          "statusCode": { "type": "integer" },
-          "error": { "type": "string" },
-          "message": { "type": "string" }
-        }
-      }
-    }
+    "schemas": {}
   },
   "paths": {
     "/core/health": {
@@ -189,10 +179,10 @@
         "tags": [
           "Stores"
         ],
-        "description": "Returns all stores scoped to the session's active organization. Requires an authenticated session with an active organization. Admins receive all stores regardless of organization.",
+        "description": "Returns all stores for the session's active organization. Admins receive all stores.",
         "responses": {
           "200": {
-            "description": "List of stores",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -210,16 +200,13 @@
                     ],
                     "properties": {
                       "id": {
-                        "type": "string",
-                        "description": "Unique store identifier (UUID)"
+                        "type": "string"
                       },
                       "userId": {
-                        "type": "string",
-                        "description": "ID of the user who created the store"
+                        "type": "string"
                       },
                       "organizationId": {
-                        "type": "string",
-                        "description": "ID of the organization that owns the store"
+                        "type": "string"
                       },
                       "name": {
                         "type": "string"
@@ -228,45 +215,16 @@
                         "type": "string"
                       },
                       "active": {
-                        "type": "boolean",
-                        "description": "Whether the store is active"
+                        "type": "boolean"
                       },
                       "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                       },
                       "updatedAt": {
-                        "type": "string",
-                        "format": "date-time"
+                        "type": "string"
                       }
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 401,
-                  "error": "Unauthorized",
-                  "message": "Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "No active organization in the session",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 403,
-                  "error": "Forbidden",
-                  "message": "Forbidden"
                 }
               }
             }
@@ -278,7 +236,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Creates a new store under the session's active organization. The organization is derived from the session — `organizationId` is not accepted in the request body. Requires an authenticated session with an active organization.",
+        "description": "Creates a new store under the session's active organization.",
         "requestBody": {
           "required": true,
           "content": {
@@ -291,17 +249,13 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
-                    "type": "string",
-                    "description": "Display name of the store"
+                    "type": "string"
                   },
                   "description": {
-                    "type": "string",
-                    "description": "Optional description"
+                    "type": "string"
                   },
                   "active": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether the store is active. Defaults to true."
+                    "type": "boolean"
                   }
                 }
               }
@@ -310,7 +264,7 @@
         },
         "responses": {
           "201": {
-            "description": "Store created successfully",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -326,16 +280,13 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string",
-                      "description": "Unique store identifier (UUID)"
+                      "type": "string"
                     },
                     "userId": {
-                      "type": "string",
-                      "description": "ID of the user who created the store"
+                      "type": "string"
                     },
                     "organizationId": {
-                      "type": "string",
-                      "description": "ID of the organization derived from the session"
+                      "type": "string"
                     },
                     "name": {
                       "type": "string"
@@ -347,40 +298,12 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     },
                     "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 401,
-                  "error": "Unauthorized",
-                  "message": "Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "No active organization in the session",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 403,
-                  "error": "Forbidden",
-                  "message": "Forbidden"
                 }
               }
             }
@@ -394,7 +317,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Returns a single store by ID. Requires an authenticated session with an active organization. The store must belong to that organization (admins can access any store).",
+        "description": "Returns a single store by ID. The store must belong to the session's active organization.",
         "parameters": [
           {
             "schema": {
@@ -402,13 +325,12 @@
             },
             "in": "path",
             "name": "id",
-            "required": true,
-            "description": "Store ID"
+            "required": true
           }
         ],
         "responses": {
           "200": {
-            "description": "Store found",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -424,16 +346,13 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string",
-                      "description": "Unique store identifier (UUID)"
+                      "type": "string"
                     },
                     "userId": {
-                      "type": "string",
-                      "description": "ID of the user who created the store"
+                      "type": "string"
                     },
                     "organizationId": {
-                      "type": "string",
-                      "description": "ID of the organization that owns the store"
+                      "type": "string"
                     },
                     "name": {
                       "type": "string"
@@ -445,53 +364,12 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     },
                     "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 401,
-                  "error": "Unauthorized",
-                  "message": "Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "No active organization in the session, or the store belongs to a different organization",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 403,
-                  "error": "Forbidden",
-                  "message": "store.forbidden"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Store not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 404,
-                  "error": "Not Found",
-                  "message": "store.not_found"
                 }
               }
             }
@@ -503,18 +381,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Updates a store's name, description, or active status. Requires an authenticated session with an active organization. The store must belong to that organization. All body fields are optional — only provided fields are updated. Pass `description: null` to clear the description.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "description": "Store ID"
-          }
-        ],
+        "description": "Updates a store's name, description, or active status. The store must belong to the session's active organization.",
         "requestBody": {
           "required": true,
           "content": {
@@ -524,26 +391,33 @@
                 "properties": {
                   "name": {
                     "minLength": 1,
-                    "type": "string",
-                    "description": "New display name"
+                    "type": "string"
                   },
                   "description": {
                     "type": "string",
-                    "nullable": true,
-                    "description": "New description. Pass null to clear."
+                    "nullable": true
                   },
                   "active": {
-                    "type": "boolean",
-                    "description": "Enable or disable the store"
+                    "type": "boolean"
                   }
                 }
               }
             }
           }
         },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Store updated successfully",
+            "description": "Default Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -559,8 +433,7 @@
                   ],
                   "properties": {
                     "id": {
-                      "type": "string",
-                      "description": "Unique store identifier (UUID)"
+                      "type": "string"
                     },
                     "userId": {
                       "type": "string"
@@ -578,53 +451,12 @@
                       "type": "boolean"
                     },
                     "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     },
                     "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
+                      "type": "string"
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 401,
-                  "error": "Unauthorized",
-                  "message": "Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "No active organization in the session, or the store belongs to a different organization",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 403,
-                  "error": "Forbidden",
-                  "message": "store.forbidden"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Store not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 404,
-                  "error": "Not Found",
-                  "message": "store.not_found"
                 }
               }
             }
@@ -636,7 +468,7 @@
         "tags": [
           "Stores"
         ],
-        "description": "Permanently deletes a store. Requires an authenticated session with an active organization. The store must belong to that organization. This action is irreversible.",
+        "description": "Permanently deletes a store. The store must belong to the session's active organization.",
         "parameters": [
           {
             "schema": {
@@ -644,50 +476,15 @@
             },
             "in": "path",
             "name": "id",
-            "required": true,
-            "description": "Store ID"
+            "required": true
           }
         ],
         "responses": {
           "204": {
-            "description": "Store deleted successfully"
-          },
-          "401": {
-            "description": "Not authenticated",
+            "description": "Default Response",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 401,
-                  "error": "Unauthorized",
-                  "message": "Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "No active organization in the session, or the store belongs to a different organization",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 403,
-                  "error": "Forbidden",
-                  "message": "store.forbidden"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Store not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": {
-                  "statusCode": 404,
-                  "error": "Not Found",
-                  "message": "store.not_found"
-                }
+                "schema": {}
               }
             }
           }
